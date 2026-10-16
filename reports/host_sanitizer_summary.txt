@@ -1,0 +1,40 @@
+ASAN / UBSAN run
+Internal ctest changing into directory: /mnt/data/espdns_v2/build-asan
+Test project /mnt/data/espdns_v2/build-asan
+    Start 1: filter
+1/2 Test #1: filter ...........................   Passed    0.42 sec
+    Start 2: dns
+2/2 Test #2: dns ..............................   Passed   14.37 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Total Test time (real) =  14.80 sec
+seed 20261016
+wire: 15197000 messages
+parsers: 5496500 rounds
+regex: 923800 patterns (267417 compiled)
+rules: 6780 compilations, 3026678 rules
+image: 131466 corrupted images, 122337 accepted by the validator and matched safely
+cache: 19578000 operations, 2330179 hits verified
+server: 1536 sync + 3060 udp queries, 4388 answers checked; forwarded 554 cached 2 failed 1407 truncated 233
+
+
+Coverage instrumented run
+Internal ctest changing into directory: /mnt/data/espdns_v2/build-coverage
+Test project /mnt/data/espdns_v2/build-coverage
+    Start 1: filter
+1/2 Test #1: filter ...........................   Passed    0.27 sec
+    Start 2: dns
+2/2 Test #2: dns ..............................   Passed   14.10 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Total Test time (real) =  14.37 sec
+seed 20261017
+wire: 16411000 messages
+parsers: 8262500 rounds
+regex: 4774800 patterns (1380193 compiled)
+rules: 9721 compilations, 4364373 rules
+image: 214543 corrupted images, 199440 accepted by the validator and matched safely
+cache: 33372000 operations, 3991579 hits verified
+server: 1458 sync + 3032 udp queries, 4301 answers checked; forwarded 638 cached 3 failed 1365 truncated 249

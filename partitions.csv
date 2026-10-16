@@ -1,0 +1,15 @@
+# ESP32-S3 N16R8 (16 MB flash).  Keep offsets stable across firmware updates.
+# Name,     Type, SubType, Offset,   Size,     Flags
+nvs,        data, nvs,     0x9000,   0x6000,
+otadata,    data, ota,     0xf000,   0x2000,
+phy_init,   data, phy,     0x11000,  0x1000,
+# firmware A/B (OTA with rollback), 1.5 MB each
+ota_0,      app,  ota_0,   0x20000,  0x180000,
+ota_1,      app,  ota_1,   0x1A0000, 0x180000,
+# configuration, custom rules, local records (NVS)
+cfg,        data, nvs,     0x320000, 0x60000,
+# compiled filter images A/B (max 4 MB each)
+rules_a,    data, 0x40,    0x380000, 0x400000,
+rules_b,    data, 0x40,    0x780000, 0x400000,
+# external sort runs while compiling (needs about the final image size)
+staging,    data, 0x41,    0xB80000, 0x480000,

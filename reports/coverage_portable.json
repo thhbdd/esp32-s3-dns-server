@@ -1,0 +1,131 @@
+{
+  "scope": "portable components compiled and executed on Linux only; does not cover ESP_PLATFORM files",
+  "totals": {
+    "total_lines": 7686,
+    "covered_lines": 6882,
+    "total_branches": 6860,
+    "covered_branches": 5136
+  },
+  "files": {
+    "components/dc_base/include/dc_port.h": {
+      "lines": 1,
+      "covered": 1,
+      "branches": 0,
+      "branch_covered": 0
+    },
+    "components/dc_base/include/dc_util.h": {
+      "lines": 55,
+      "covered": 55,
+      "branches": 8,
+      "branch_covered": 7
+    },
+    "components/dc_base/src/dc_net.c": {
+      "lines": 182,
+      "covered": 160,
+      "branches": 230,
+      "branch_covered": 187
+    },
+    "components/dc_base/src/dc_port_posix.c": {
+      "lines": 103,
+      "covered": 98,
+      "branches": 60,
+      "branch_covered": 34
+    },
+    "components/dc_base/src/dc_util.c": {
+      "lines": 77,
+      "covered": 74,
+      "branches": 44,
+      "branch_covered": 35
+    },
+    "components/dns_core/src/dns_cache.c": {
+      "lines": 321,
+      "covered": 306,
+      "branches": 200,
+      "branch_covered": 156
+    },
+    "components/dns_core/src/dns_config.c": {
+      "lines": 129,
+      "covered": 125,
+      "branches": 120,
+      "branch_covered": 103
+    },
+    "components/dns_core/src/dns_engine.c": {
+      "lines": 522,
+      "covered": 473,
+      "branches": 413,
+      "branch_covered": 310
+    },
+    "components/dns_core/src/dns_local.c": {
+      "lines": 155,
+      "covered": 132,
+      "branches": 118,
+      "branch_covered": 93
+    },
+    "components/dns_core/src/dns_server.c": {
+      "lines": 1069,
+      "covered": 966,
+      "branches": 794,
+      "branch_covered": 543
+    },
+    "components/dns_core/src/dns_stats.c": {
+      "lines": 69,
+      "covered": 67,
+      "branches": 43,
+      "branch_covered": 35
+    },
+    "components/dns_core/src/dns_wire.c": {
+      "lines": 350,
+      "covered": 348,
+      "branches": 272,
+      "branch_covered": 243
+    },
+    "components/fl_filter/src/fl_compile.c": {
+      "lines": 1421,
+      "covered": 1263,
+      "branches": 1199,
+      "branch_covered": 885
+    },
+    "components/fl_filter/src/fl_engine.c": {
+      "lines": 929,
+      "covered": 835,
+      "branches": 896,
+      "branch_covered": 656
+    },
+    "components/fl_filter/src/fl_fsst.c": {
+      "lines": 142,
+      "covered": 138,
+      "branches": 108,
+      "branch_covered": 98
+    },
+    "components/fl_filter/src/fl_internal.h": {
+      "lines": 57,
+      "covered": 57,
+      "branches": 28,
+      "branch_covered": 19
+    },
+    "components/fl_filter/src/fl_name.c": {
+      "lines": 144,
+      "covered": 143,
+      "branches": 244,
+      "branch_covered": 222
+    },
+    "components/fl_filter/src/fl_regex.c": {
+      "lines": 992,
+      "covered": 836,
+      "branches": 941,
+      "branch_covered": 649
+    },
+    "components/fl_filter/src/fl_rr.c": {
+      "lines": 405,
+      "covered": 288,
+      "branches": 424,
+      "branch_covered": 271
+    },
+    "components/fl_filter/src/fl_rule.c": {
+      "lines": 563,
+      "covered": 517,
+      "branches": 718,
+      "branch_covered": 590
+    }
+  }
+}

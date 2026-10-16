@@ -1,0 +1,21 @@
+menu "ESP32-S3 DNS"
+
+    config APP_WIFI_SSID
+        string "Wi-Fi network (preset, used until changed in the web UI)"
+        default ""
+        help
+            Optional.  With a network set here the device connects right
+            after flashing.  Empty: the setup hotspot opens instead.
+
+    config APP_WIFI_PASSWORD
+        string "Wi-Fi password (preset)"
+        default ""
+
+    config APP_SETUP_AP_PASSWORD
+        string "Setup hotspot password (8-63 characters)"
+        default "esp32dns"
+        help
+            Password of the "ESP32-DNS-XXXX" setup hotspot.  Shorter than 8
+            characters: the hotspot is open.
+
+endmenu

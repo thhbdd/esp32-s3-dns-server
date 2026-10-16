@@ -1,0 +1,4 @@
+# Since ESP-IDF v6.0, cJSON is maintained as a managed component.
+# Also works with ESP-IDF 5.5 and avoids depending on its legacy built-in json.
+dependencies:
+  espressif/cjson: "^1.7.19"

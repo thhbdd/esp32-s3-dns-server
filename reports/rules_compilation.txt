@@ -1,0 +1,22 @@
+wrote /mnt/data/espdns_v2/adblockdns_compiled.img:
+  lines            233248
+  comments/empty   10
+  cosmetic         0
+  hosts rules      0
+  network rules    233238
+    plain index    233238
+    with modifiers 0
+    patterns       0 (regex 0, dfa 0, nfa 0)
+    dnsrewrite     0
+    badfilter      0 (negated at compile time: 0)
+  invalid          0
+  not for DNS      0
+  never matching   0
+  too wide         0
+  unsupported      0 ($client/$ctag skipped: 0)
+  too long         0
+  distinct keys    233211
+  image bytes      2737416 (2.611 MiB)
+  sort runs        11 (compactions 0), staging peak 2740224 bytes
+  compile time     338 ms
+  [0] /mnt/data/adblockdns.txt     lines=233248 rules=233238 invalid=0 unsupported=0 (client_skipped=0)

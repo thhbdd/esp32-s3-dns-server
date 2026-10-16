@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ESP32 DNS</title>
+<link rel="icon" href="data:,">
+<style>:root{--bg:#f4f6f9;--card:#fff;--fg:#1f2933;--mut:#6b7785;--line:#e3e8ef;--pri:#2563eb;--ok:#16a34a;--warn:#d97706;--bad:#dc2626;--code:#f1f4f8}@media (prefers-color-scheme:dark){:root{--bg:#0f141a;--card:#171e26;--fg:#e6ebf0;--mut:#93a1b0;--line:#26313d;--pri:#4f8cff;--code:#1d2630}}*{box-sizing:border-box}body{margin:0;font:14px/1.5 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--fg)}header{display:flex;align-items:center;gap:16px;padding:10px 16px;background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5;flex-wrap:wrap}header h1{font-size:16px;margin:0;white-space:nowrap}nav{display:flex;gap:4px;flex-wrap:wrap}nav a{padding:6px 12px;border-radius:6px;color:var(--fg);text-decoration:none;cursor:pointer}nav a.on{background:var(--pri);color:#fff}#hstat{margin-left:auto;color:var(--mut);font-size:12px}main{max-width:1180px;margin:0 auto;padding:16px}.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}.card h2{font-size:15px;margin:0 0 12px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-bottom:16px}.kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}.kpi .v{font-size:19px;font-weight:600;white-space:nowrap}.kpi .l{color:var(--mut);font-size:12px}.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:6px 0}.row>label{min-width:150px;color:var(--mut)}input[type=text],input[type=password],input[type=number],select,textarea{background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font:inherit}input[type=text],input[type=password]{min-width:240px}textarea{width:100%;font-family:ui-monospace,Consolas,monospace;font-size:13px}button{background:var(--pri);color:#fff;border:0;border-radius:6px;padding:7px 14px;font:inherit;cursor:pointer}button.sec{background:var(--code);color:var(--fg);border:1px solid var(--line)}button.danger{background:var(--bad)}button:disabled{opacity:.5;cursor:default}table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--mut);font-weight:500}td.num,th.num{text-align:right}.tag{display:inline-block;padding:1px 7px;border-radius:10px;font-size:12px;background:var(--code)}.t-blocked,.t-resp{background:#fde2e2;color:#a61b1b}.t-cached{background:#dcf5e3;color:#13652f}.t-fwd{background:#e2ebfd;color:#1d4fb8}.t-rw,.t-local{background:#fdf0d8;color:#8a5208}.t-allow{background:#e0f4f1;color:#0f6b5c}.t-fail{background:#eee;color:#555}@media (prefers-color-scheme:dark){.t-blocked,.t-resp{background:#4a1d1d;color:#ffb4b4}.t-cached{background:#163a22;color:#9be3b0}.t-fwd{background:#1b2c4f;color:#a8c4ff}.t-rw,.t-local{background:#45320f;color:#ffd391}.t-allow{background:#123b35;color:#8fe0d2}.t-fail{background:#333;color:#bbb}}.mut{color:var(--mut)}.ok{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--warn)}.hide{display:none}code,.mono{font-family:ui-monospace,Consolas,monospace;font-size:12.5px}.help{color:var(--mut);font-size:12px;margin:4px 0}canvas{width:100%;height:180px}#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:8px 16px;border-radius:8px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9;max-width:90%}#toast.show{opacity:.92}.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden}.bar>div{height:100%;background:var(--pri)}.split{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:800px){.split{grid-template-columns:1fr}}.warnbox{background:#fff4e0;color:#7a4b00;border:1px solid #f3c77a;border-radius:8px;padding:10px 12px;margin-bottom:16px}@media (prefers-color-scheme:dark){.warnbox{background:#3a2b0f;color:#ffd38a;border-color:#6b4f17}}.okbox{background:#e6f6ea;color:#14532d;border:1px solid #9fd8ae;border-radius:8px;padding:10px 12px;margin-bottom:16px}@media (prefers-color-scheme:dark){.okbox{background:#12301c;color:#a7e8b9;border-color:#245c36}}.okbox a,.warnbox a{color:inherit;font-weight:600}#setup button{margin-left:8px}</style>
+</head>
+<body>
+<header>
+<h1>ESP32-S3 DNS</h1>
+<nav id="nav">
+<a data-p="dash" class="on">概览</a><a data-p="log">查询日志</a><a data-p="filters">过滤规则</a>
+<a data-p="local">本地解析</a><a data-p="dns">DNS 设置</a><a data-p="sys">系统</a>
+</nav>
+<span id="hstat"></span>
+</header>
+<main>
+<div id="setup" class="hide"></div>
+<div id="pwwarn" class="warnbox hide">尚未设置管理密码，局域网内任何人都可以修改配置。请到「系统」页设置密码。</div>
+<section id="p-dash">
+<div class="grid">
+<div class="kpi"><div class="v" id="k-q">-</div><div class="l">查询总数</div></div>
+<div class="kpi"><div class="v" id="k-qps">-</div><div class="l">当前 QPS</div></div>
+<div class="kpi"><div class="v" id="k-b">-</div><div class="l">已拦截 (<span id="k-bp">-</span>)</div></div>
+<div class="kpi"><div class="v" id="k-ch">-</div><div class="l">缓存命中率</div></div>
+<div class="kpi"><div class="v" id="k-lc">-</div><div class="l">缓存应答 p50 / p99</div></div>
+<div class="kpi"><div class="v" id="k-lf">-</div><div class="l">上游应答 p50 / p99</div></div>
+</div>
+<div class="card"><h2>24 小时查询量 <span class="mut" style="font-weight:400">（蓝：总数，红：拦截，每分钟）</span></h2><canvas id="chart" height="180"></canvas></div>
+<div class="split">
+<div class="card"><h2>上游服务器</h2><table id="t-up"><thead><tr><th>地址</th><th class="num">延迟</th><th class="num">成功</th><th class="num">超时</th><th>状态</th></tr></thead><tbody></tbody></table></div>
+<div class="card"><h2>设备</h2><table id="t-dev"><tbody></tbody></table></div>
+</div>
+<div class="split">
+<div class="card"><h2>热门域名 <span class="mut" style="font-weight:400">（最近查询）</span></h2><table id="t-top"><tbody></tbody></table></div>
+<div class="card"><h2>热门拦截 <span class="mut" style="font-weight:400">（最近查询）</span></h2><table id="t-topb"><tbody></tbody></table></div>
+</div>
+</section>
+<section id="p-log" class="hide">
+<div class="card">
+<div class="row">
+<input type="text" id="lq" placeholder="搜索域名或客户端 IP">
+<select id="lr"><option value="">全部结果</option><option value="2">已拦截</option><option value="8">响应拦截</option><option value="1">缓存</option><option value="0">上游</option><option value="3">重写</option><option value="4">本地</option><option value="5">白名单放行</option><option value="6">失败</option></select>
+<button onclick="loadLog()">刷新</button>
+<label><input type="checkbox" id="lauto"> 自动刷新</label>
+<span class="mut" id="lcount"></span>
+</div>
+<table id="t-log"><thead><tr><th>时间</th><th>客户端</th><th>域名</th><th>类型</th><th>结果</th><th class="num">耗时</th><th></th></tr></thead><tbody></tbody></table>
+</div>
+</section>
+<section id="p-filters" class="hide">
+<div class="card">
+<h2>过滤</h2>
+<div class="row"><label>启用过滤保护</label><input type="checkbox" id="f-en"><span class="help">关闭后仅 $dnsrewrite 和本地解析生效</span></div>
+<div class="row"><label>自动更新间隔（小时）</label><input type="number" id="f-int" min="0" max="720" style="width:90px"><span class="help">0 = 仅手动更新</span></div>
+<div class="row"><button onclick="saveFilterSettings()">保存</button></div>
+</div>
+<div class="card">
+<h2>订阅列表</h2>
+<table id="t-subs"><thead><tr><th>启用</th><th>名称</th><th>地址</th><th>白名单</th><th>状态</th><th></th></tr></thead><tbody></tbody></table>
+<div class="row" style="margin-top:10px">
+<input type="text" id="s-name" placeholder="名称" style="min-width:140px">
+<input type="text" id="s-url" placeholder="https://..." style="flex:1">
+<label><input type="checkbox" id="s-allow"> 白名单列表</label>
+<button onclick="addSub()">添加</button>
+</div>
+<div class="row">
+<button onclick="saveSubs()">保存列表</button>
+<button class="sec" onclick="update(false)">检查更新</button>
+<button class="sec" onclick="update(true)">强制重建</button>
+<span id="upd" class="mut"></span>
+</div>
+<div id="imginfo" class="help"></div>
+</div>
+<div class="card">
+<h2>自定义规则</h2>
+<p class="help">支持普通域名 <code>||ads.com^</code>、放行 <code>@@||ok.com^</code>、hosts、通配符、<code>/正则/</code> 及 <code>$important</code> <code>$badfilter</code> <code>$dnstype</code> <code>$dnsrewrite</code> <code>$denyallow</code>（<code>$client</code>/<code>$ctag</code> 编译期自动识别跳过并统计，不转为全局规则）。</p>
+<textarea id="rules" rows="14" spellcheck="false"></textarea>
+<div class="row"><button onclick="saveRules()">保存规则</button><span id="rinfo" class="mut"></span></div>
+</div>
+<div class="card">
+<h2>域名检查</h2>
+<div class="row">
+<input type="text" id="c-name" placeholder="例如 ads.example.com">
+<select id="c-type"><option>A</option><option>AAAA</option><option>HTTPS</option><option>CNAME</option><option>TXT</option><option>MX</option></select>
+<button onclick="check()">检查</button>
+</div>
+<div id="c-out"></div>
+</div>
+</section>
+<section id="p-local" class="hide">
+<div class="card">
+<h2>本地解析（DNS 重写）</h2>
+<p class="help">每行一条：<code>域名 类型 值 [ttl=秒]</code>，优先级最高。例：<code>nas.home A 192.168.1.10</code>、<code>*.lan A 192.168.1.1</code>、<code>alias.home CNAME nas.home</code>、<code>pc.home AAAA -</code>。</p>
+<textarea id="localtxt" rows="18" spellcheck="false"></textarea>
+<div class="row"><button onclick="saveLocal()">保存</button></div>
+</div>
+</section>
+<section id="p-dns" class="hide">
+<div class="card">
+<h2>上游服务器</h2>
+<p class="help">每行一个：<code>223.5.5.5</code>、<code>[2400:3200::1]:53</code>、<code>tcp://119.29.29.29</code>、<code>tls://dns.alidns.com</code>（DoT）、
+<code>tls://223.5.5.5@dns.alidns.com</code>（固定 IP + 证书名）、<code>https://doh.pub/dns-query</code>（DoH）。</p>
+<textarea id="d-ups" rows="5" spellcheck="false"></textarea>
+<div class="row"><label>引导 DNS（解析 DoT/DoH 主机名）</label><input type="text" id="d-boot" placeholder="223.5.5.5, 119.29.29.29"></div>
+<div class="row"><label>上游策略</label><select id="d-strat"><option value="fastest">最快优先（推荐）</option><option value="load_balance">按延迟负载均衡</option><option value="parallel">并行请求，取最快</option></select></div>
+<div class="row"><label>单次尝试超时（毫秒）</label><input type="number" id="d-uto" min="100" max="10000" style="width:100px"><span class="help">实际按测得延迟自适应，不超过此值</span></div>
+<div class="row"><label>总超时（毫秒）</label><input type="number" id="d-qto" min="500" max="30000" style="width:100px"></div>
+</div>
+<div class="card">
+<h2>缓存</h2>
+<div class="row"><label>缓存大小（KB）</label><input type="number" id="d-cache" min="0" max="4096" style="width:100px"><span class="help">PSRAM；与规则镜像共享 8 MB</span></div>
+<div class="row"><label>最小 TTL（秒）</label><input type="number" id="d-minttl" min="0" style="width:100px"><label>最大 TTL（秒）</label><input type="number" id="d-maxttl" min="0" style="width:100px"><span class="help">0 = 不限制</span></div>
+<div class="row"><label>乐观缓存</label><input type="checkbox" id="d-opt"><span class="help">过期记录先返回（TTL 30 秒）并在后台刷新</span></div>
+<div class="row"><button class="sec" onclick="post('/api/cache/flush').then(()=>toast('缓存已清空'))">清空缓存</button></div>
+</div>
+<div class="card">
+<h2>拦截方式</h2>
+<div class="row"><label>拦截响应</label><select id="d-bm"><option value="default">默认（hosts 规则返回其 IP，其余 0.0.0.0 / ::）</option><option value="null_ip">0.0.0.0 / ::</option><option value="nxdomain">NXDOMAIN</option><option value="refused">REFUSED</option><option value="custom_ip">自定义 IP</option></select></div>
+<div class="row"><label>自定义 IPv4 / IPv6</label><input type="text" id="d-cip4" style="min-width:140px"><input type="text" id="d-cip6" style="min-width:200px"></div>
+<div class="row"><label>拦截响应 TTL（秒）</label><input type="number" id="d-bttl" min="0" style="width:100px"></div>
+</div>
+<div class="card">
+<h2>监听与访问控制</h2>
+<div class="row"><label>端口</label><input type="number" id="d-port" min="1" max="65535" style="width:100px"><label><input type="checkbox" id="d-v6"> IPv6</label><label><input type="checkbox" id="d-tcp"> TCP</label><span class="help">修改后需重启</span></div>
+<div class="row"><label>仅允许局域网客户端</label><input type="checkbox" id="d-lo"><span class="help">私有/链路本地/回环地址</span></div>
+<div class="row"><label>额外允许的网段</label><input type="text" id="d-allow" placeholder="10.8.0.0/16, 100.64.0.0/10"></div>
+<div class="row"><label>每客户端限速（次/秒）</label><input type="number" id="d-rl" min="0" style="width:100px"><span class="help">0 = 不限</span></div>
+<div class="row"><label>拒绝 ANY 查询</label><input type="checkbox" id="d-any"></div>
+<div class="row"><label>DNS-over-HTTPS (DoH)</label><input type="checkbox" id="d-doh"><label style="min-width:auto">HTTPS 端口</label><input type="number" id="d-hport" min="1" max="65535" style="width:90px" value="443"><span class="help">https://设备地址/dns-query（RFC 8484，esp_https_server）</span></div>
+<div class="row"><label>DNS-over-TLS (DoT)</label><input type="checkbox" id="d-dot"><label style="min-width:auto">DoT 端口</label><input type="number" id="d-dport" min="1" max="65535" style="width:90px" value="853"><span class="help">tls://设备地址:853（RFC 7858）</span></div>
+<div class="row"><label>查询日志条数</label><input type="number" id="d-qlog" min="0" max="5000" style="width:100px"><span class="help">修改后需重启</span></div>
+</div>
+<div class="card">
+<h2>TLS 证书配置（HTTPS DoH &amp; DoT 共用）</h2>
+<p class="help">手动上传或粘贴 PEM 证书与私钥并保存，即可启用 HTTPS DoH 与 DoT。</p>
+<div class="row"><label>当前证书状态</label><span id="tls-st" class="mut">未配置证书</span></div>
+<div class="row"><label>证书文件 (PEM)</label><input type="file" id="tls-cf" accept=".pem,.crt,.cer" onchange="readPem(this,'tls-c')"><label style="min-width:auto">私钥文件 (PEM)</label><input type="file" id="tls-kf" accept=".pem,.key" onchange="readPem(this,'tls-k')"></div>
+<div class="split">
+<div><div class="help">证书内容 (-----BEGIN CERTIFICATE-----)</div><textarea id="tls-c" rows="4" spellcheck="false" placeholder="-----BEGIN CERTIFICATE-----..."></textarea></div>
+<div><div class="help">私钥内容 (-----BEGIN PRIVATE KEY-----)</div><textarea id="tls-k" rows="4" spellcheck="false" placeholder="-----BEGIN PRIVATE KEY-----..."></textarea></div>
+</div>
+<div class="row"><button class="sec" onclick="saveTls()">上传并保存证书</button><button class="sec" onclick="clearTls()">清除证书</button></div>
+</div>
+<div class="row"><button onclick="saveDns()">保存 DNS 设置</button></div>
+</section>
+<section id="p-sys" class="hide">
+<div class="split">
+<div class="card">
+<h2>Wi-Fi 与网络</h2>
+<div class="row"><label>当前状态</label><span id="n-state" class="mut">-</span></div>
+<p class="help">仅支持 2.4 GHz Wi-Fi，建议设置静态 IP。</p>
+<div class="row"><label>SSID</label><input type="text" id="n-ssid"><button class="sec" onclick="scan()">扫描</button></div>
+<div id="scanres" class="help"></div>
+<div class="row"><label>密码</label><input type="password" id="n-pass" placeholder="不修改请留空"><span class="help"><input type="checkbox" id="n-open" onchange="$('n-pass').disabled=this.checked"> 开放网络（无密码）</span></div>
+<div class="row"><label>主机名</label><input type="text" id="n-host"></div>
+<div class="row"><label>静态 IP</label><input type="checkbox" id="n-static"><span class="help">DNS 服务器建议使用固定地址</span></div>
+<div class="row"><label>IP / 掩码 / 网关</label><input type="text" id="n-ip" style="min-width:120px"><input type="text" id="n-mask" style="min-width:120px"><input type="text" id="n-gw" style="min-width:120px"></div>
+<div class="row"><label>NTP 服务器</label><input type="text" id="n-ntp"></div>
+<div class="row"><label>时区（POSIX TZ）</label><input type="text" id="n-tz" style="min-width:120px"><span class="help">中国：CST-8</span></div>
+<div class="row"><button onclick="saveNet()">保存网络设置</button></div>
+</div>
+<div class="card">
+<h2>管理账户</h2>
+<div class="row"><label>用户名</label><input type="text" id="a-user"></div>
+<div class="row"><label>新密码</label><input type="password" id="a-pass"><span class="help">留空并保存 = 取消密码</span></div>
+<div class="row"><button onclick="savePass()">修改密码</button></div>
+<h2 style="margin-top:20px">Web 端口</h2>
+<div class="row"><label>HTTP 端口</label><input type="number" id="w-port" min="1" max="65535" style="width:100px"><button class="sec" onclick="saveWebPort()">保存</button></div>
+</div>
+</div>
+<div class="split">
+<div class="card">
+<h2>固件升级（OTA）</h2>
+<div class="row"><input type="file" id="o-file" accept=".bin"><button onclick="otaUpload()">上传并升级</button></div>
+<div class="bar hide" id="o-bar"><div style="width:0"></div></div>
+<div class="row"><input type="text" id="o-url" placeholder="https://.../esp32s3_dns.bin" style="flex:1"><button class="sec" onclick="otaUrl()">从网址升级</button></div>
+<p class="help">运行 1 分钟后确认，失败自动回滚。</p>
+</div>
+<div class="card">
+<h2>维护</h2>
+<div class="row"><button class="sec" onclick="location.href='/api/backup'">下载备份</button><input type="file" id="r-file" accept=".json"><button class="sec" onclick="restore()">恢复备份</button></div>
+<div class="row"><button class="sec" onclick="if(confirm('确定重启？'))post('/api/reboot').then(()=>toast('正在重启…'))">重启</button>
+<button class="danger" onclick="if(confirm('恢复出厂设置会清除所有配置（包括 Wi-Fi），确定？'))post('/api/factory-reset').then(()=>toast('已恢复出厂设置，正在重启'))">恢复出厂设置</button></div>
+<p class="help">长按 BOOT 10 秒恢复出厂设置。</p>
+<table id="t-ver"><tbody></tbody></table>
+</div>
+</div>
+</section>
+</main>
+<div id="toast"></div>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let CFG=null,STATUS=null,lastQ=null,lastT=0,page='dash';
+function toast(m,bad){const t=$('toast');t.textContent=m;t.style.background=bad?'#b91c1c':'#111';t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),bad?5000:2200)}
+async function api(url,opt){const r=await fetch(url,opt);const ct=r.headers.get('content-type')||'';const body=ct.includes('json')?await r.json():await r.text();if(!r.ok){throw new Error((body&&body.error)||body||r.status)}return body}
+const post=(u,b)=>api(u,{method:'POST',headers:b?{'Content-Type':'application/json'}:{},body:b?JSON.stringify(b):undefined}).catch(e=>{toast(e.message,1);throw e});
+const put=(u,b,type)=>api(u,{method:'PUT',headers:{'Content-Type':type||'application/json'},body:type?b:JSON.stringify(b)});
+const fmtN=n=>n>=1e6?(n/1e6).toFixed(2)+'M':n>=1e4?(n/1e3).toFixed(1)+'k':String(n);
+const fmtUs=u=>u>=1e6?(u/1e6).toFixed(2)+' s':u>=1000?(u/1000).toFixed(u>=1e5?0:1)+' ms':u+' µs';
+const fmtB=b=>b>=1048576?(b/1048576).toFixed(2)+' MB':b>=1024?(b/1024).toFixed(0)+' KB':b+' B';
+const fmtDur=s=>{s=Math.floor(s||0);const d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60);return (d?d+'天 ':'')+h+'小时 '+m+'分 '+(s%60)+'秒'};
+const fmtTime=t=>t?new Date(t*1000).toLocaleString('zh-CN',{hour12:false}):'-';
+const ago=s=>s<90?'刚刚':s<5400?Math.round(s/60)+' 分钟前':Math.round(s/3600)+' 小时前';
+const WREASON={2:'认证超时，密码可能不对',15:'密码错误',202:'认证失败，密码错误或路由器拒绝',204:'握手超时，密码可能不对',
+201:'找不到这个 Wi-Fi（检查名称，ESP32 只支持 2.4 GHz）',210:'找不到加密方式兼容的 Wi-Fi',211:'找不到加密方式兼容的 Wi-Fi',
+203:'关联失败（信号太弱或路由器拒绝）',205:'连接失败',200:'信号丢失',8:'被路由器断开'};
+const reasonText=r=>WREASON[r]||('原因代码 '+r);
+function setupBanner(n){const b=$('setup');
+if(n.ap_active&&!n.connected){b.className='warnbox';
+b.innerHTML=`<b>设备还没有连上 Wi-Fi</b>${n.configured&&n.last_reason?'：'+esc(reasonText(n.last_reason)):(n.configured?'，正在连接…':'')}。请在「系统」页选择你的 Wi-Fi 并填写密码，建议同时设置静态 IP。${page!='sys'?'<button onclick="show(\'sys\')">去设置</button>':''}`;}
+else if(n.ap_active&&n.connected){b.className='okbox';
+const url=`http://${esc(n.ip)}${location.port?':'+location.port:''}/`;
+b.innerHTML=`<b>已连接 Wi-Fi「${esc(n.ssid)}」</b>，设备地址：<a href="${url}">${url}</a><br>请把手机或电脑切回这个 Wi-Fi，再打开上面的地址；然后把路由器 DHCP 的 DNS（或设备的 DNS）设为 <b>${esc(n.ip)}</b>。配置热点「${esc(n.ap_ssid)}」将在 3 分钟内关闭。`;}
+else b.className='hide';
+$('n-state').innerHTML=(n.connected?`<span class="ok">已连接「${esc(n.ssid)}」</span>，IP ${esc(n.ip)}，信号 ${n.rssi} dBm`:
+(n.configured?`<span class="bad">未连接</span>${n.last_reason?'：'+esc(reasonText(n.last_reason)):'，正在连接…'}`:'<span class="warn">尚未配置 Wi-Fi</span>'))+
+(n.ap_active?`；配置热点「${esc(n.ap_ssid)}」开启中（${esc(n.ap_ip)}）`:'');}
+const RES={0:['上游','t-fwd'],1:['缓存','t-cached'],2:['已拦截','t-blocked'],3:['重写','t-rw'],4:['本地','t-local'],5:['放行','t-allow'],6:['失败','t-fail'],7:['拒绝','t-fail'],8:['响应拦截','t-resp']};
+document.querySelectorAll('#nav a').forEach(a=>a.onclick=()=>show(a.dataset.p));
+const dirty=p=>!!$('p-'+p).dataset.dirty,clean=p=>{const s=$('p-'+p);if(s)delete s.dataset.dirty};
+const NODIRTY=['c-name','c-type','o-file','o-url','r-file','tls-cf','tls-kf','tls-c','tls-k'];
+['filters','local','dns','sys'].forEach(p=>$('p-'+p).addEventListener('input',e=>{if(!NODIRTY.includes(e.target.id))$('p-'+p).dataset.dirty=1}));
+function show(p){page=p;document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.p==p));
+document.querySelectorAll('main>section').forEach(s=>s.classList.toggle('hide',s.id!='p-'+p));
+if(p=='dash')draw();if(p=='log')loadLog();if(p=='filters')loadFilters();if(p=='local'&&!dirty('local'))loadLocal();if(p=='dns'||p=='sys')loadCfg().catch(e=>toast(e.message,1));}
+function renderTls(t){if(!t)return;
+$('tls-st').innerHTML=t.configured?`<span class="ok">已加载证书</span>${t.subject?'（'+esc(t.subject)+'，有效至 '+esc(t.valid_until||'-')+'）':''} · HTTPS DoH: ${t.https_running?'<span class="ok">运行中</span>':'未启动'} · DoT: ${t.dot_running?'<span class="ok">运行中</span>':'未启动'}`:'<span class="warn">尚未上传证书（上传后启用 HTTPS DoH / DoT）</span>';}
+async function refresh(){try{const s=await api('/api/status');STATUS=s;const d=s.dns;
+const now=performance.now();if(lastQ!==null&&now>lastT)$('k-qps').textContent=((d.queries-lastQ)/((now-lastT)/1000)).toFixed(1);lastQ=d.queries;lastT=now;
+$('k-q').textContent=fmtN(d.queries);const bl=d.blocked+d.resp_blocked;$('k-b').textContent=fmtN(bl);$('k-bp').textContent=d.queries?(100*bl/d.queries).toFixed(1)+'%':'-';
+const c=d.cache,hits=c.l1_hits+c.l2_hits+c.stale_hits;$('k-ch').textContent=hits+c.misses?(100*hits/(hits+c.misses)).toFixed(1)+'%':'-';
+$('k-lc').textContent=d.latency.cached.count?fmtUs(d.latency.cached.p50_us)+' / '+fmtUs(d.latency.cached.p99_us):'-';
+$('k-lf').textContent=d.latency.forwarded.count?fmtUs(d.latency.forwarded.p50_us)+' / '+fmtUs(d.latency.forwarded.p99_us):'-';
+$('t-up').tBodies[0].innerHTML=d.upstreams.map(u=>`<tr><td class="mono">${esc(u.address)}</td><td class="num">${u.rtt_ms?u.rtt_ms.toFixed(1)+' ms':'-'}</td><td class="num">${u.ok}</td><td class="num">${u.timeouts}</td><td>${u.healthy?'<span class="ok">正常</span>':'<span class="bad">暂停</span>'}</td></tr>`).join('');
+const n=s.network,m=s.memory,f=s.filters;
+$('t-dev').tBodies[0].innerHTML=[['运行时间',fmtDur(s.uptime)],['Wi-Fi',n.connected?`${esc(n.ssid)}（${n.rssi} dBm，信道 ${n.channel}）`:(n.ap_active?`配置热点 ${esc(n.ap_ssid)}`:'<span class="bad">未连接</span>')],
+['IP 地址',esc(n.ip||'-')+(n.ipv6.length?'<br><span class="mono mut">'+n.ipv6.map(esc).join('<br>')+'</span>':'')],['内部 RAM',fmtB(m.internal_free)+' 可用（最低 '+fmtB(m.internal_min)+'）'],
+['PSRAM',fmtB(m.psram_free)+' / '+fmtB(m.psram_total)],['规则镜像',f.image&&f.image.keys?fmtB(f.image.bytes)+'，'+fmtN(f.image.keys)+' 个域名键':'未加载'],
+['缓存',fmtN(c.entries)+' 条，'+fmtB(c.bytes_used)+' / '+fmtB(c.bytes_total)],['固件',esc(s.version)]].map(r=>`<tr><th>${r[0]}</th><td>${r[1]}</td></tr>`).join('');
+$('pwwarn').classList.toggle('hide',s.password_set||n.ap_active&&!n.connected);
+setupBanner(n);if(s.tls)renderTls(s.tls);
+$('hstat').textContent=(n.connected?n.ip:'未联网')+' · '+fmtDur(s.uptime);
+updStatus(f);
+}catch(e){$('hstat').textContent='连接失败: '+e.message}}
+function updStatus(f){if(!f)return;const u=f.update;const ph={idle:'空闲',check:'检查更新',download:'下载中',compile:'编译中',activate:'切换中',failed:'失败'}[u.phase]||u.phase;
+$('upd').innerHTML=u.running?`<span class="warn">${ph}${u.current?'：'+esc(u.current):''}，已下载 ${fmtB(u.bytes)}</span>`:
+(u.error?`<span class="bad">上次更新失败：${esc(u.error)}</span>`:(u.last_ok?`上次成功：${fmtTime(u.last_ok)}`:u.last_ok_ago_s>=0?`上次成功：${ago(u.last_ok_ago_s)}`:''))+(u.next_in_s&&!u.running?`，下次约 ${Math.round(u.next_in_s/60)} 分钟后`:'');
+const im=f.image;const cskip=im&&im.client_skipped!==undefined?`已跳过 $client/$ctag 规则 ${im.client_skipped} 条（不支持共 ${im.unsupported} 条）`:(im?`已跳过 $client/$ctag 及不支持规则 ${im.unsupported} 条`:'');
+$('imginfo').innerHTML=im&&im.keys?`当前镜像：${fmtB(im.bytes)}，${fmtN(im.keys)} 个域名键，${im.complex} 条带修饰符规则，${im.generic} 条通配/正则规则（${im.regex} 条正则），${cskip}，无效 ${im.invalid}，非 DNS 规则 ${im.not_dns}；编译耗时 ${im.compile_ms} ms`:'当前没有订阅规则镜像';}
+let HIST=null;
+async function history(){try{HIST=await api('/api/history');draw()}catch(e){}}
+function draw(){const h=HIST;if(!h)return;const cv=$('chart'),dpr=window.devicePixelRatio||1,W=cv.clientWidth,H=180;cv.width=W*dpr;cv.height=H*dpr;
+const g=cv.getContext('2d');g.scale(dpr,dpr);g.clearRect(0,0,W,H);const q=h.queries,b=h.blocked,n=q.length;if(!n){g.fillStyle='#888';g.fillText('暂无数据（每分钟记录一次）',10,20);return}
+const mx=Math.max(1,...q),w=W/Math.max(n,60);const st=getComputedStyle(document.body);
+g.fillStyle=st.getPropertyValue('--pri');q.forEach((v,i)=>{const hh=(H-20)*v/mx;g.fillRect(i*w,H-hh,Math.max(w-.5,.5),hh)});
+g.fillStyle='#dc2626';b.forEach((v,i)=>{const hh=(H-20)*v/mx;g.fillRect(i*w,H-hh,Math.max(w-.5,.5),hh)});
+g.fillStyle=st.getPropertyValue('--mut');g.font='11px sans-serif';g.fillText('峰值 '+mx+' 次/分钟',4,12);}
+async function tops(){try{const l=await api('/api/querylog?limit=1000');const cnt={},cb={};l.forEach(e=>{cnt[e.name]=(cnt[e.name]||0)+1;if(e.result==2||e.result==8)cb[e.name]=(cb[e.name]||0)+1});
+const top=(o)=>Object.entries(o).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([k,v])=>`<tr><td class="mono">${esc(k)}</td><td class="num">${v}</td></tr>`).join('')||'<tr><td class="mut">暂无</td></tr>';
+$('t-top').tBodies[0].innerHTML=top(cnt);$('t-topb').tBodies[0].innerHTML=top(cb);}catch(e){}}
+async function loadLog(){const q=encodeURIComponent($('lq').value.trim()),r=$('lr').value;try{const l=await api(`/api/querylog?limit=500&q=${q}${r!==''?'&result='+r:''}`);
+$('lcount').textContent=l.length+' 条';
+$('t-log').tBodies[0].innerHTML=l.map(e=>{const [t,c]=RES[e.result]||['?',''];const blocked=e.result==2||e.result==8;
+return `<tr><td class="mono">${e.t?new Date(e.t*1000).toLocaleTimeString('zh-CN',{hour12:false}):'-'}</td><td class="mono">${esc(e.client)}</td><td class="mono">${esc(e.name)}</td><td>${e.type}</td><td><span class="tag ${c}">${t}</span>${e.rcode==3?' <span class="mut">NX</span>':e.rcode==2?' <span class="bad">SF</span>':''}</td><td class="num">${fmtUs(e.us)}</td>
+<td><a href="#" data-n="${esc(e.name)}" onclick="quickRule(this.dataset.n,${blocked});return false">${blocked?'放行':'拦截'}</a></td></tr>`}).join('');}catch(e){toast(e.message,1)}}
+$('lq').onkeydown=e=>{if(e.key=='Enter')loadLog()};$('lr').onchange=loadLog;
+async function quickRule(name,allow){const rule=(allow?'@@||':'||')+name+'^';if(!confirm(`添加自定义规则：${rule} ？`))return;
+const cur=await api('/api/rules');await put('/api/rules',(cur.trim()?cur.replace(/\s*$/,'\n'):'')+rule+'\n','text/plain').then(()=>toast('已添加：'+rule)).catch(e=>toast(e.message,1));}
+const rinfo=c=>c.loaded?`${c.rules} 条生效规则${c.client_skipped?`，已跳过 $client/$ctag ${c.client_skipped} 条`:(c.unsupported?`，已跳过 $client/$ctag 或不支持 ${c.unsupported} 条`:'')}${c.invalid?'，'+c.invalid+' 条无效':''}`:'';
+async function loadFilters(){try{await loadCfg();const f=await api('/api/filters');updStatus(f);
+if(!dirty('filters')){$('f-en').checked=CFG.filtering.enabled;$('f-int').value=CFG.filtering.update_interval_hours;subs=CFG.filtering.subscriptions.map(x=>({...x}));
+$('rules').value=await api('/api/rules');$('rinfo').textContent=rinfo(f.custom)}
+renderSubs(f)}catch(e){toast(e.message,1)}}
+let subs=[];
+function renderSubs(f){const st={};(f&&f.lists||[]).forEach(l=>st[l.url]=l);
+$('t-subs').tBodies[0].innerHTML=subs.map((s,i)=>{const x=st[s.url];let info='<span class="mut">未下载</span>';
+if(x){const sk=x.client_skipped||x.unsupported||0;info=(x.ok||x.ok_time?`${fmtN(x.rules||0)} 条，${fmtB(x.bytes||0)}${sk?`（跳过 ${sk} 条）`:''}`+(x.ok_time?`<br><span class="mut">${fmtTime(x.ok_time)}</span>`:''):'')+(x.error?`<br><span class="bad">${esc(x.error)}</span>`:'')}
+return `<tr><td><input type="checkbox" ${s.enabled?'checked':''} onchange="subs[${i}].enabled=this.checked"></td><td>${esc(s.name)}</td><td class="mono" style="word-break:break-all">${esc(s.url)}</td><td>${s.allowlist?'是':''}</td><td>${info}</td><td><a href="#" onclick="subs.splice(${i},1);$('p-filters').dataset.dirty=1;renderSubs(lastF);return false">删除</a></td></tr>`}).join('');lastF=f;}
+let lastF=null;
+function addSub(){const u=$('s-url').value.trim();if(!/^https?:\/\//.test(u))return toast('地址需以 http:// 或 https:// 开头',1);subs.push({name:$('s-name').value.trim()||u.split('/').pop(),url:u,enabled:true,allowlist:$('s-allow').checked});$('p-filters').dataset.dirty=1;$('s-url').value=$('s-name').value='';renderSubs(lastF);}
+async function saveCfg(part,okmsg){try{const r=await put('/api/config',part);clean(page);toast(okmsg||'已保存');if(r.restart_required&&confirm('部分设置需要重启后生效，现在重启？'))post('/api/reboot');CFG=null;return r}catch(e){toast(e.message,1);throw e}}
+function saveSubs(){saveCfg({filtering:{subscriptions:subs}},'已保存，正在后台更新规则')}
+function saveFilterSettings(){saveCfg({filtering:{enabled:$('f-en').checked,update_interval_hours:+$('f-int').value}})}
+async function update(force){await post('/api/filters/update'+(force?'?force=1':''));toast(force?'已开始重建规则':'已开始检查更新');setTimeout(async()=>updStatus(await api('/api/filters')),1500)}
+async function saveRules(){try{const f=await put('/api/rules',$('rules').value,'text/plain');clean('filters');toast('规则已生效');$('rinfo').textContent=rinfo(f.custom)}catch(e){toast(e.message,1)}}
+async function check(){const n=$('c-name').value.trim();if(!n)return;try{const r=await api(`/api/check?name=${encodeURIComponent(n)}&type=${$('c-type').value}`);
+const vd={none:'未匹配规则',allowed:'被例外规则放行',allowlisted:'白名单列表放行',blocked:'拦截',rewritten:'重写'}[r.verdict];
+let h=`<p><b>${vd}</b>${r.rule?'：<code>'+esc(r.rule)+'</code>'+(r.source?' <span class="mut">（'+esc(r.source)+'）</span>':''):''}${r.cname?' → '+esc(r.cname):''}</p>`;
+if(r.matches.length)h+='<table><thead><tr><th>匹配的规则</th><th>来源</th><th>作用</th></tr></thead><tbody>'+r.matches.map(m=>`<tr><td class="mono">${esc(m.rule)}</td><td>${esc(m.source)}</td><td>${esc(m.effect)}</td></tr>`).join('')+'</tbody></table>';
+if(r.answer)h+=`<p>实际应答：<b>${esc(r.answer.rcode)}</b>，${r.answer.ms.toFixed(1)} ms</p>`+(r.answer.records&&r.answer.records.length?'<table><tbody>'+r.answer.records.map(x=>`<tr><td>${x.type}</td><td class="num">${x.ttl}</td><td class="mono">${esc(x.value)}</td></tr>`).join('')+'</tbody></table>':'');
+$('c-out').innerHTML=h}catch(e){toast(e.message,1)}}
+$('c-name').onkeydown=e=>{if(e.key=='Enter')check()};
+async function loadLocal(){$('localtxt').value=await api('/api/local')}
+async function saveLocal(){try{await put('/api/local',$('localtxt').value,'text/plain');clean('local');toast('本地解析已生效')}catch(e){toast(e.message,1)}}
+async function loadCfg(){if(!CFG)CFG=await api('/api/config');const c=CFG,d=c.dns,f=c.filtering,n=c.network;
+if(!dirty('dns')){$('d-ups').value=d.upstreams.join('\n');$('d-boot').value=d.bootstrap.join(', ');$('d-strat').value=d.strategy;$('d-uto').value=d.upstream_timeout_ms;$('d-qto').value=d.query_timeout_ms;
+$('d-cache').value=d.cache_size_kb;$('d-minttl').value=d.cache_min_ttl;$('d-maxttl').value=d.cache_max_ttl;$('d-opt').checked=d.optimistic;
+$('d-bm').value=f.block_mode;$('d-cip4').value=f.custom_ipv4;$('d-cip6').value=f.custom_ipv6;$('d-bttl').value=f.blocked_ttl;
+$('d-port').value=d.port;$('d-v6').checked=d.ipv6;$('d-tcp').checked=d.tcp;$('d-lo').checked=d.local_only;$('d-allow').value=d.allow.join(', ');$('d-rl').value=d.ratelimit;$('d-any').checked=d.refuse_any;
+$('d-doh').checked=c.system.doh;$('d-hport').value=c.system.https_port||443;$('d-dot').checked=c.system.dot!==false;$('d-dport').value=c.system.dot_port||853;$('d-qlog').value=d.qlog_entries;
+api('/api/tls').then(renderTls).catch(()=>{})}
+if(!dirty('sys')){$('n-ssid').value=n.ssid;$('n-open').checked=false;$('n-pass').disabled=false;$('n-host').value=n.hostname;$('n-static').checked=n.static_ip;$('n-ip').value=n.ip;$('n-mask').value=n.netmask;$('n-gw').value=n.gateway;$('n-ntp').value=n.ntp.join(', ');$('n-tz').value=n.timezone;
+$('a-user').value=c.system.username;$('w-port').value=c.system.web_port}
+if(STATUS)$('t-ver').tBodies[0].innerHTML=[['固件版本',STATUS.version],['ESP-IDF',STATUS.idf],['编译日期',STATUS.build],['上次重启原因',STATUS.reset_reason]].map(r=>`<tr><th>${r[0]}</th><td>${esc(r[1])}</td></tr>`).join('');}
+const list=s=>s.split(/[\s,，]+/).map(x=>x.trim()).filter(Boolean);
+function saveDns(){saveCfg({dns:{upstreams:$('d-ups').value.split('\n').map(x=>x.trim()).filter(Boolean),bootstrap:list($('d-boot').value),strategy:$('d-strat').value,
+upstream_timeout_ms:+$('d-uto').value,query_timeout_ms:+$('d-qto').value,cache_size_kb:+$('d-cache').value,cache_min_ttl:+$('d-minttl').value,cache_max_ttl:+$('d-maxttl').value,optimistic:$('d-opt').checked,
+port:+$('d-port').value,ipv6:$('d-v6').checked,tcp:$('d-tcp').checked,local_only:$('d-lo').checked,allow:list($('d-allow').value),ratelimit:+$('d-rl').value,refuse_any:$('d-any').checked,qlog_entries:+$('d-qlog').value},
+filtering:{block_mode:$('d-bm').value,custom_ipv4:$('d-cip4').value.trim(),custom_ipv6:$('d-cip6').value.trim(),blocked_ttl:+$('d-bttl').value},
+system:{doh:$('d-doh').checked,https_port:+$('d-hport').value||443,dot:$('d-dot').checked,dot_port:+$('d-dport').value||853}})}
+async function readPem(inp,tid){const f=inp.files[0];if(f)$(tid).value=await f.text()}
+async function saveTls(){const cert=$('tls-c').value.trim(),key=$('tls-k').value.trim();if(!cert||!key)return toast('请选择或粘贴 PEM 证书和私钥',1);
+try{const r=await put('/api/tls',{cert,key});renderTls(r);$('tls-c').value=$('tls-k').value='';toast('TLS 证书已保存并生效')}catch(e){toast(e.message,1)}}
+async function clearTls(){if(!confirm('确定清除已保存的 TLS 证书？'))return;try{const r=await api('/api/tls',{method:'DELETE'});renderTls(r);toast('证书已清除')}catch(e){toast(e.message,1)}}
+async function scan(){$('scanres').textContent='扫描中…';try{const l=await api('/api/wifi/scan');$('scanres').innerHTML=l.map(a=>`<a href="#" data-open="${a.secure?0:1}" onclick="pickNet(this);return false">${esc(a.ssid)}</a> <span class="mut">${a.rssi} dBm${a.secure?'':'，开放'}</span>`).join('　')||'未发现网络'}catch(e){$('scanres').textContent=e.message}}
+function pickNet(a){$('n-ssid').value=a.textContent;const o=a.dataset.open=='1';$('n-open').checked=o;$('n-pass').disabled=o;$('p-sys').dataset.dirty=1}
+function saveNet(){const n={ssid:$('n-ssid').value,hostname:$('n-host').value,static_ip:$('n-static').checked,ip:$('n-ip').value.trim(),netmask:$('n-mask').value.trim(),gateway:$('n-gw').value.trim(),ntp:list($('n-ntp').value),timezone:$('n-tz').value.trim()};
+if($('n-open').checked)n.password='';else if($('n-pass').value)n.password=$('n-pass').value;if(!n.ssid)return toast('请填写 Wi-Fi 名称',1);
+const viaAp=STATUS&&STATUS.network.ap_active&&!STATUS.network.connected;
+if(!confirm(viaAp?'保存后设备开始连接这个 Wi-Fi。连接成功后本页顶部会显示设备的新地址（配置热点会再保留 3 分钟）。继续？':'保存后设备会重新连接 Wi-Fi，地址可能改变。继续？'))return;
+saveCfg({network:n},'已保存，正在连接 Wi-Fi…').then(()=>{$('n-pass').value='';window.scrollTo({top:0,behavior:'smooth'});setTimeout(refresh,2500)}).catch(()=>{})}
+async function savePass(){try{await post('/api/password',{username:$('a-user').value.trim(),password:$('a-pass').value});toast('密码已修改，请重新登录');setTimeout(()=>location.reload(),1500)}catch(e){}}
+function saveWebPort(){saveCfg({system:{web_port:+$('w-port').value}})}
+function otaUpload(){const f=$('o-file').files[0];if(!f)return toast('请选择固件文件',1);const x=new XMLHttpRequest();x.open('POST','/api/ota');const bar=$('o-bar');bar.classList.remove('hide');
+x.upload.onprogress=e=>{bar.firstElementChild.style.width=(100*e.loaded/e.total)+'%'};x.onload=()=>{if(x.status==200)toast('升级成功，正在重启…');else{let m=x.responseText;try{m=JSON.parse(m).error}catch(e){}toast('升级失败：'+m,1)}};x.onerror=()=>toast('上传失败',1);x.send(f)}
+function otaUrl(){const u=$('o-url').value.trim();post('/api/ota/url',{url:u}).then(()=>toast('已开始下载固件，完成后自动重启'))}
+async function restore(){const f=$('r-file').files[0];if(!f)return toast('请选择备份文件',1);if(!confirm('恢复备份会覆盖当前所有配置并重启，继续？'))return;
+try{await api('/api/restore',{method:'POST',headers:{'Content-Type':'application/json'},body:await f.text()});toast('已恢复，正在重启')}catch(e){toast(e.message,1)}}
+const every=(ms,f)=>{const run=async()=>{if(!document.hidden)try{await f()}catch(e){}setTimeout(run,ms)};setTimeout(run,ms)};
+refresh();history();tops();
+every(3000,()=>page!='log'&&refresh());
+every(60000,()=>page=='dash'&&Promise.all([history(),tops()]));
+every(3000,()=>page=='log'&&$('lauto').checked&&loadLog());
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&page!='log')refresh()});
+let rzT;window.onresize=()=>{clearTimeout(rzT);rzT=setTimeout(draw,150)};
+</script>
+</body>
+</html>
