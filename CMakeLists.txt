@@ -1,7 +1,7 @@
 # ESP32-S3 (N16R8) high performance DNS filter / resolver.
 #   idf.py set-target esp32s3 && idf.py build flash monitor
 cmake_minimum_required(VERSION 3.16)
-set(PROJECT_VER "1.0.3")
+set(PROJECT_VER "1.0.4")
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(esp32s3_dns)
 

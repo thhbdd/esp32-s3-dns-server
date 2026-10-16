@@ -1,16 +1,16 @@
-# ESP32-S3 DNS Server v1.0.3 · Release Notes
+# ESP32-S3 DNS Server v1.0.4 · Release Notes
 
 > 本文档由 AI 整理生成。
 
-发布目标：**ESP32-S3 N16R8 / ESP-IDF v6.1**。固件应用镜像的版本字段为 `1.0.3`。
+发布目标：**ESP32-S3 N16R8 / ESP-IDF v6.1**。固件应用镜像的版本字段为 `1.0.4`。
 
 ## 附件与下载
 
 | 附件 | 用途 | 注意 |
 |---|---|---|
-| [`merged-binary.bin`](https://github.com/thhbdd/esp32-s3-dns-server/releases/download/v1.0.3/merged-binary.bin) | 首次完整刷机 | **ESP32-S3，偏移 `0x0`** |
-| [`esp32s3_dns.bin`](https://github.com/thhbdd/esp32-s3-dns-server/releases/download/v1.0.3/esp32s3_dns.bin) | Web UI OTA | 仅含应用，**不能当完整镜像刷在 `0x0`** |
-| [`SHA256SUMS.txt`](https://github.com/thhbdd/esp32-s3-dns-server/releases/download/v1.0.3/SHA256SUMS.txt) | 校验两份镜像 | 先检查再刷写 |
+| [`merged-binary.bin`](https://github.com/thhbdd/esp32-s3-dns-server/releases/download/v1.0.4/merged-binary.bin) | 首次完整刷机 | **ESP32-S3，偏移 `0x0`** |
+| [`esp32s3_dns.bin`](https://github.com/thhbdd/esp32-s3-dns-server/releases/download/v1.0.4/esp32s3_dns.bin) | Web UI OTA | 仅含应用，**不能当完整镜像刷在 `0x0`** |
+| [`SHA256SUMS.txt`](https://github.com/thhbdd/esp32-s3-dns-server/releases/download/v1.0.4/SHA256SUMS.txt) | 校验两份镜像 | 先检查再刷写 |
 
 SHA-256：
 
@@ -23,7 +23,7 @@ SHA-256：
 
 ## 本次版本变化
 
-- **v1.0.3：** 过滤规则 FSST 符号表构建内存优化，降低候选哈希表临时开销；当符号表临时内存分配失败时可退化为未压缩后缀继续编译，但退化镜像可能更大，仍受 4MiB 规则槽位限制。
+- **v1.0.4：** 过滤规则 FSST 符号表构建内存优化，降低候选哈希表临时开销；当符号表临时内存分配失败时可退化为未压缩后缀继续编译，但退化镜像可能更大，仍受 4MiB 规则槽位限制。
 - **保留 v1.0.2：** 成功启用新规则后，擦除废弃的旧规则槽和 staging 数据；不改变固定分区布局。Flash 擦除有耗时和寿命成本。
 - **保留 v1.0.1：** 规则编译期间临时释放 DNS 缓存的可回收内存，结束后按最新配置恢复；保持 DNS 解析继续运行。
 - **服务能力：** UDP/TCP DNS、Web UI、规则过滤与 DNS 本地记录，DoH/DoT 上下游能力依赖相应配置和证书。

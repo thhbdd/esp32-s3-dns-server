@@ -4,9 +4,9 @@
 
 **在 ESP32-S3 N16R8 上运行的轻量 DNS 解析、过滤与缓存服务器。** 使用 ESP-IDF C 实现，提供 UDP/TCP DNS、AdGuard DNS 规则、Web 管理界面、本地 DNS 重写、上游 DoH/DoT，以及可选的 HTTPS DoH/DoT 服务端。
 
-> **当前发布：v1.0.3 · 目标硬件 ESP32-S3（16MB Flash / 8MB Octal PSRAM）。** 适用于自建局域网 DNS 服务，管理端口不应直接暴露公网。
+> **当前发布：v1.0.4 · 目标硬件 ESP32-S3（16MB Flash / 8MB Octal PSRAM）。** 适用于自建局域网 DNS 服务，管理端口不应直接暴露公网。
 
-[**下载预编译固件 · GitHub Releases**](https://github.com/thhbdd/esp32-s3-dns-server/releases/tag/v1.0.3) · [**首次烧录 / OTA 教程**](docs/INSTALL.md) · [**首次配置**](docs/FIRST_RUN.md) · [**稳定性测试**](docs/STABILITY_TEST.md)
+[**下载预编译固件 · GitHub Releases**](https://github.com/thhbdd/esp32-s3-dns-server/releases/tag/v1.0.4) · [**首次烧录 / OTA 教程**](docs/INSTALL.md) · [**首次配置**](docs/FIRST_RUN.md) · [**稳定性测试**](docs/STABILITY_TEST.md)
 
 ![管理页面概览](img/04.png)
 
@@ -38,7 +38,7 @@
 
 ## 3. 五分钟快速上手
 
-1. 到 [Releases v1.0.3](https://github.com/thhbdd/esp32-s3-dns-server/releases/tag/v1.0.3) 下载 `merged-binary.bin`，核对文件 SHA-256，并确保开发板确为 **ESP32-S3 N16R8**。
+1. 到 [Releases v1.0.4](https://github.com/thhbdd/esp32-s3-dns-server/releases/tag/v1.0.4) 下载 `merged-binary.bin`，核对文件 SHA-256，并确保开发板确为 **ESP32-S3 N16R8**。
 2. 在 Windows 的 Flash Download Tool 选择 **ESP32-S3 / 16MB / DIO / 80MHz**，添加完整镜像和偏移 **`0x0`**。或使用 `esptool` 命令：
 
    ```powershell
@@ -127,4 +127,4 @@ sdkconfig.defaults    ESP32-S3 默认配置
 | API / JSON / 备份 / OTA | [API](docs/API.md) |
 | Windows/Linux 源码构建、6.1 兼容 | [开发说明](docs/DEVELOPMENT.md) · [ESP-IDF 6.x](docs/ESP_IDF_6.md) |
 | 故障分析 / 测试计划 / 代码审查 | [排障](docs/TROUBLESHOOTING.md) · [测试计划](docs/TEST_PLAN.md) · [代码审计](docs/CODE_AUDIT.md) |
-| 本次版本发布信息 | [v1.0.3 发布说明](docs/RELEASE_NOTES_v1.0.3.md) · [历史更新](CHANGELOG.md) |
+| 本次版本发布信息 | [v1.0.4 发布说明](docs/RELEASE_NOTES_v1.0.4.md) · [历史更新](CHANGELOG.md) |

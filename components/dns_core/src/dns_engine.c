@@ -404,6 +404,52 @@ static int try_local(const view_t *v, const cq_t *cq, const char *host, size_t h
     return L_ANSWERED;
 }
 
+/* RFC 6303-style local empty reverse zones.  Resolve configured local PTR
+ * records and explicit filter rules first; never leak other private reverse
+ * lookups to public upstream DNS.  No additional heap allocations. */
+static bool reverse_zone_matches(const char *name, size_t len, const char *zone) {
+    size_t zlen = strlen(zone);
+    return len >= zlen && memcmp(name + len - zlen, zone, zlen) == 0 &&
+           (len == zlen || name[len - zlen - 1] == '.');
+}
+
+/* e.g. 7.31.172.in-addr.arpa: check the decimal label before 172. */
+static bool reverse_zone_octet_range(const char *name, size_t len, const char *zone,
+                                     unsigned low, unsigned high) {
+    size_t zlen = strlen(zone);
+    if (!reverse_zone_matches(name, len, zone) || len <= zlen + 1) return false;
+    size_t end = len - zlen - 1;
+    size_t begin = end;
+    while (begin && name[begin - 1] != '.') begin--;
+    if (end == begin || end - begin > 3) return false;
+    unsigned val = 0;
+    for (size_t i = begin; i < end; i++) {
+        if (name[i] < '0' || name[i] > '9') return false;
+        val = val * 10u + (unsigned)(name[i] - '0');
+    }
+    return val >= low && val <= high;
+}
+
+static bool private_reverse_ptr(const char *name, size_t len) {
+    static const char *const zones[] = {
+        "0.in-addr.arpa",           /* 0/8 (this network) */
+        "10.in-addr.arpa",          /* RFC 1918: 10/8 */
+        "127.in-addr.arpa",         /* loopback */
+        "254.169.in-addr.arpa",     /* IPv4 link-local: 169.254/16 */
+        "168.192.in-addr.arpa",     /* RFC 1918: 192.168/16 */
+        "c.f.ip6.arpa",            /* IPv6 ULA: fc00::/7 */
+        "d.f.ip6.arpa",
+        "8.e.f.ip6.arpa",          /* IPv6 link-local: fe80::/10 */
+        "9.e.f.ip6.arpa",
+        "a.e.f.ip6.arpa",
+        "b.e.f.ip6.arpa",
+    };
+    for (size_t i = 0; i < sizeof(zones) / sizeof(zones[0]); i++)
+        if (reverse_zone_matches(name, len, zones[i])) return true;
+    return reverse_zone_octet_range(name, len, "172.in-addr.arpa", 16, 31) ||
+           reverse_zone_octet_range(name, len, "100.in-addr.arpa", 64, 127); /* CGNAT: 100.64/10 */
+}
+
 /* ---- pipeline --------------------------------------------------------------------------- */
 
 static void make_key(dns_ckey_t *k, const uint8_t *name, size_t nl, const cq_t *cq) {
@@ -566,6 +612,15 @@ int dns_handle(dns_server_t *s, qctx_t *c) {
     }
 
 lookup:;
+    /* Unconfigured private-address PTRs are local NXDOMAIN, not public DNS
+     * lookups.  Local records and user rules above retain precedence, while
+     * an explicit CNAME rewrite is allowed to resolve its target normally. */
+    if (q.qclass == DNS_C_IN && q.qtype == DNS_T_PTR && q.host_ok && !cq.cname_rw &&
+        private_reverse_ptr(q.host, q.host_len)) {
+        c->out_len = syn_error(&cq, DNS_RC_NXDOMAIN, c->out, c->cap);
+        cq.result = DNS_QL_LOCAL;
+        goto done;
+    }
     /* 3. cache */
     dns_ckey_t key;
     make_key(&key, fname, fname_len, &cq);
